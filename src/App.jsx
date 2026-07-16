@@ -80,12 +80,17 @@ const COMPARISON_OPTIONS = [
   { id: 'less', name: '📉 少ない・小さい', description: 'より少ない・より小さい方を選ぶ' },
 ];
 
+const ANSWER_OPTIONS = [
+  { id: 'two', name: '2択', description: '標準の2択クイズ' },
+  { id: 'four', name: '4択', description: '選択肢を4つに増やす' },
+];
+
 const TIME_LIMIT_SECONDS = 10;
 
-const createQuizData = (selectedOption, numQuizzes, comparisonMode, difficultyMode = 'standard') => {
+const createQuizData = (selectedOption, numQuizzes, comparisonMode, difficultyMode = 'standard', answerMode = 'two') => {
   const quizzes = [];
 
-  const pickRandomPair = (genreKey) => {
+  const pickRandomPair = () => {
     const pref1Index = Math.floor(Math.random() * PREFECTURE_DATA.length);
     let pref2Index = Math.floor(Math.random() * PREFECTURE_DATA.length);
     while (pref1Index === pref2Index) {
@@ -101,6 +106,16 @@ const createQuizData = (selectedOption, numQuizzes, comparisonMode, difficultyMo
 
     const index = Math.floor(Math.random() * (sorted.length - 1));
     return [sorted[index].pref, sorted[index + 1].pref];
+  };
+
+  const pickAdditionalChoices = (correctPrefNames) => {
+    const candidates = PREFECTURE_DATA.filter((pref) => !correctPrefNames.includes(pref.name));
+    const choices = [];
+    while (choices.length < 2 && candidates.length > 0) {
+      const index = Math.floor(Math.random() * candidates.length);
+      choices.push(candidates.splice(index, 1)[0]);
+    }
+    return choices;
   };
 
   for (let i = 0; i < numQuizzes; i++) {
@@ -134,10 +149,16 @@ const createQuizData = (selectedOption, numQuizzes, comparisonMode, difficultyMo
         ? `【お米の生産量（収穫量）が${comparisonMode === 'more' ? '多い' : '少ない'}】`
         : `【人口が${comparisonMode === 'more' ? '多かった' : '少なかった'}】`;
 
+    const extraChoices = answerMode === 'four'
+      ? pickAdditionalChoices([pref1.name, pref2.name])
+      : [];
+
+    const incorrectAnswers = [incorrectAnswer, ...extraChoices.map((pref) => pref.name)];
+
     quizzes.push({
       question: `💡「${pref1.name}」と「${pref2.name}」、${questionText}のはどっち？`,
       correct_answer: correctAnswer,
-      incorrect_answers: [incorrectAnswer],
+      incorrect_answers: incorrectAnswers,
       details: details
     });
   }
@@ -149,6 +170,7 @@ function App() {
   const [selectedGenre, setSelectedGenre] = useState('random');
   const [questionCount, setQuestionCount] = useState(5);
   const [difficultyMode, setDifficultyMode] = useState('standard');
+  const [answerMode, setAnswerMode] = useState('two');
   const [gameMode, setGameMode] = useState('normal');
   const [comparisonMode, setComparisonMode] = useState('more');
   const [viewMode, setViewMode] = useState('menu');
@@ -202,7 +224,7 @@ function App() {
       details: '',
       isCorrect: false
     });
-    const quizData = createQuizData(selectedGenre, questionCount, comparisonMode, difficultyMode);
+    const quizData = createQuizData(selectedGenre, questionCount, comparisonMode, difficultyMode, answerMode);
     setQuestions(quizData);
   };
 
@@ -408,6 +430,31 @@ function App() {
                 >
                   <div>{difficulty.name}</div>
                   <div style={{ fontSize: '13px', fontWeight: 'normal', color: '#555555', marginTop: '2px' }}>{difficulty.description}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ marginBottom: '30px', textAlign: 'left' }}>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '16px' }}>回答形式：</label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {ANSWER_OPTIONS.map((option) => (
+                <button
+                  key={option.id}
+                  onClick={() => setAnswerMode(option.id)}
+                  style={{
+                    padding: '12px 14px',
+                    borderRadius: '8px',
+                    border: answerMode === option.id ? '2px solid #6610f2' : '2px solid #d0d7de',
+                    backgroundColor: answerMode === option.id ? '#f3e8ff' : '#ffffff',
+                    color: '#000000',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  <div>{option.name}</div>
+                  <div style={{ fontSize: '13px', fontWeight: 'normal', color: '#555555', marginTop: '2px' }}>{option.description}</div>
                 </button>
               ))}
             </div>
