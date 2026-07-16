@@ -1,16 +1,69 @@
-# React + Vite
+# Quiz App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A React + Vite quiz app that compares real Japanese prefecture statistics. Players choose quiz types, game modes, and answer questions about population, area, and rice production.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Japanese prefecture statistics quiz
+- Randomized question generation
+- Multiple game modes: normal, time attack, fail-fast
+- Comparison options: more or less
+- Built with React 19 and Vite
 
-## React Compiler
+## Setup
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Install dependencies:
 
-## Expanding the ESLint configuration
+```bash
+npm install
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Development
+
+Start the development server:
+
+```bash
+npm run dev
+```
+
+Open the browser at the URL shown in the terminal.
+
+## Build
+
+Build the production output:
+
+```bash
+npm run build
+```
+
+## Testing
+
+This project uses Vitest with a `jsdom` environment.
+
+Run the test suite:
+
+```bash
+npm test
+```
+
+Run tests in watch mode:
+
+```bash
+npm run test:watch
+```
+
+## Linting
+
+Run ESLint for the project:
+
+```bash
+npm run lint
+```
+
+## Important files
+
+- `src/App.jsx` — main quiz application
+- `src/App.test.jsx` — test coverage for quiz logic and initial render
+- `src/setupTests.js` — test setup for `@testing-library/jest-dom`
+- `vite.config.js` — Vite config including test environment
+- `package.json` — scripts and dependencies

@@ -559,4 +559,5 @@ function App() {
   );
 }
 
+export { createQuizData };
 export default App;
