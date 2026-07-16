@@ -67,3 +67,8 @@ npm run lint
 - `src/setupTests.js` — test setup for `@testing-library/jest-dom`
 - `vite.config.js` — Vite config including test environment
 - `package.json` — scripts and dependencies
+
+## Links
+
+- 日本の統計雑学クイズ: https://nitakuquizapp.vercel.app/
+- データの参照元: https://www.e-stat.go.jp/
