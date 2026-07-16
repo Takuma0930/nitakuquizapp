@@ -3,25 +3,52 @@ import React, { useState, useEffect } from 'react';
 // --- 日本のリアルな統計データ ---
 const PREFECTURE_DATA = [
   { name: '北海道', population: 5224614, area: 83424, rice: 641000 },
-  { name: '東京都', population: 14047594, area: 2194, rice: 600 },
-  { name: '神奈川県', population: 9237337, area: 2416, rice: 12000 },
-  { name: '大阪府', population: 8837648, area: 1905, rice: 27000 },
-  { name: '愛知県', population: 7542415, area: 5173, rice: 102000 },
+  { name: '青森県', population: 1236442, area: 9646, rice: 265000 },
+  { name: '岩手県', population: 1233055, area: 15275, rice: 353000 },
+  { name: '宮城県', population: 2301996, area: 7282, rice: 361000 },
+  { name: '秋田県', population: 959502, area: 11638, rice: 444000 },
+  { name: '山形県', population: 1074855, area: 9323, rice: 319000 },
+  { name: '福島県', population: 1779049, area: 13784, rice: 332000 },
+  { name: '茨城県', population: 2867004, area: 6094, rice: 337000 },
+  { name: '栃木県', population: 1940737, area: 6408, rice: 310000 },
+  { name: '群馬県', population: 1937400, area: 6362, rice: 206000 },
   { name: '埼玉県', population: 7344765, area: 3797, rice: 62000 },
   { name: '千葉県', population: 6284400, area: 5157, rice: 265000 },
-  { name: '兵庫県', population: 5465002, area: 8401, rice: 144000 },
-  { name: '福岡県', population: 5135214, area: 4987, rice: 140000 },
-  { name: '静岡県', population: 3633202, area: 7777, rice: 33000 },
-  { name: '茨城県', population: 2867004, area: 6094, rice: 337000 },
-  { name: '広島県', population: 2798378, area: 8479, rice: 83000 },
-  { name: '京都府', population: 2579921, area: 4612, rice: 52000 },
-  { name: '宮城県', population: 2301996, area: 7282, rice: 361000 },
+  { name: '東京都', population: 14047594, area: 2194, rice: 600 },
+  { name: '神奈川県', population: 9237337, area: 2416, rice: 12000 },
   { name: '新潟県', population: 2201275, area: 12584, rice: 593000 },
+  { name: '富山県', population: 1036829, area: 4247, rice: 89000 },
+  { name: '石川県', population: 1154008, area: 4186, rice: 98000 },
+  { name: '福井県', population: 767469, area: 4190, rice: 70000 },
+  { name: '山梨県', population: 819678, area: 4465, rice: 22500 },
   { name: '長野県', population: 2048011, area: 13562, rice: 115000 },
-  { name: '秋田県', population: 959502, area: 11638, rice: 444000 },
-  { name: '高知県', population: 691527, area: 7103, rice: 31000 },
+  { name: '岐阜県', population: 1960739, area: 10621, rice: 152000 },
+  { name: '静岡県', population: 3633202, area: 7777, rice: 33000 },
+  { name: '愛知県', population: 7542415, area: 5173, rice: 102000 },
+  { name: '三重県', population: 1796690, area: 5775, rice: 39000 },
+  { name: '滋賀県', population: 1412916, area: 4017, rice: 82000 },
+  { name: '京都府', population: 2579921, area: 4612, rice: 52000 },
+  { name: '大阪府', population: 8837648, area: 1905, rice: 27000 },
+  { name: '兵庫県', population: 5465002, area: 8401, rice: 144000 },
+  { name: '奈良県', population: 1257617, area: 3690, rice: 52000 },
+  { name: '和歌山県', population: 927183, area: 4724, rice: 78000 },
   { name: '鳥取県', population: 553407, area: 3507, rice: 49000 },
+  { name: '島根県', population: 665728, area: 6708, rice: 120000 },
+  { name: '岡山県', population: 1869775, area: 7114, rice: 134000 },
+  { name: '広島県', population: 2798378, area: 8479, rice: 83000 },
+  { name: '山口県', population: 1310819, area: 6113, rice: 42000 },
+  { name: '徳島県', population: 727977, area: 4147, rice: 114000 },
   { name: '香川県', population: 950244, area: 1877, rice: 47000 },
+  { name: '愛媛県', population: 1385262, area: 5677, rice: 117000 },
+  { name: '高知県', population: 691527, area: 7103, rice: 31000 },
+  { name: '福岡県', population: 5135214, area: 4987, rice: 140000 },
+  { name: '佐賀県', population: 804130, area: 2441, rice: 121000 },
+  { name: '長崎県', population: 1325674, area: 4180, rice: 145000 },
+  { name: '熊本県', population: 1767500, area: 7409, rice: 330000 },
+  { name: '大分県', population: 1116617, area: 6340, rice: 211000 },
+  { name: '宮崎県', population: 1091064, area: 7735, rice: 245000 },
+  { name: '鹿児島県', population: 1598177, area: 9188, rice: 338000 },
+  { name: '沖縄県', population: 1460515, area: 2276, rice: 8000 },
 ];
 
 const GENRES = [
@@ -43,6 +70,11 @@ const MODE_OPTIONS = [
   { id: 'fail-fast', name: '💥 1ミスで即終了', description: '1問でも間違えたら終了' },
 ];
 
+const DIFFICULTY_OPTIONS = [
+  { id: 'standard', name: '🟢 標準', description: '通常のランダムなペア出題' },
+  { id: 'close', name: '🔥 近い数値', description: '値が近い都道府県ペアで出題' },
+];
+
 const COMPARISON_OPTIONS = [
   { id: 'more', name: '📈 多い・大きい', description: 'より多い・より大きい方を選ぶ' },
   { id: 'less', name: '📉 少ない・小さい', description: 'より少ない・より小さい方を選ぶ' },
@@ -50,8 +82,26 @@ const COMPARISON_OPTIONS = [
 
 const TIME_LIMIT_SECONDS = 10;
 
-const createQuizData = (selectedOption, numQuizzes, comparisonMode) => {
+const createQuizData = (selectedOption, numQuizzes, comparisonMode, difficultyMode = 'standard') => {
   const quizzes = [];
+
+  const pickRandomPair = (genreKey) => {
+    const pref1Index = Math.floor(Math.random() * PREFECTURE_DATA.length);
+    let pref2Index = Math.floor(Math.random() * PREFECTURE_DATA.length);
+    while (pref1Index === pref2Index) {
+      pref2Index = Math.floor(Math.random() * PREFECTURE_DATA.length);
+    }
+    return [PREFECTURE_DATA[pref1Index], PREFECTURE_DATA[pref2Index]];
+  };
+
+  const pickClosePair = (genreKey) => {
+    const sorted = PREFECTURE_DATA
+      .map((pref) => ({ pref, value: pref[genreKey] }))
+      .sort((a, b) => a.value - b.value);
+
+    const index = Math.floor(Math.random() * (sorted.length - 1));
+    return [sorted[index].pref, sorted[index + 1].pref];
+  };
 
   for (let i = 0; i < numQuizzes; i++) {
     let activeGenre;
@@ -62,14 +112,9 @@ const createQuizData = (selectedOption, numQuizzes, comparisonMode) => {
       activeGenre = GENRES.find(g => g.key === selectedOption);
     }
 
-    const pref1Index = Math.floor(Math.random() * PREFECTURE_DATA.length);
-    let pref2Index = Math.floor(Math.random() * PREFECTURE_DATA.length);
-    while (pref1Index === pref2Index) {
-      pref2Index = Math.floor(Math.random() * PREFECTURE_DATA.length);
-    }
-    
-    const pref1 = PREFECTURE_DATA[pref1Index];
-    const pref2 = PREFECTURE_DATA[pref2Index];
+    const [pref1, pref2] = difficultyMode === 'close'
+      ? pickClosePair(activeGenre.key)
+      : pickRandomPair(activeGenre.key);
 
     const val1 = pref1[activeGenre.key];
     const val2 = pref2[activeGenre.key];
@@ -103,6 +148,7 @@ const createQuizData = (selectedOption, numQuizzes, comparisonMode) => {
 function App() {
   const [selectedGenre, setSelectedGenre] = useState('random');
   const [questionCount, setQuestionCount] = useState(5);
+  const [difficultyMode, setDifficultyMode] = useState('standard');
   const [gameMode, setGameMode] = useState('normal');
   const [comparisonMode, setComparisonMode] = useState('more');
   const [viewMode, setViewMode] = useState('menu');
@@ -156,7 +202,7 @@ function App() {
       details: '',
       isCorrect: false
     });
-    const quizData = createQuizData(selectedGenre, questionCount, comparisonMode);
+    const quizData = createQuizData(selectedGenre, questionCount, comparisonMode, difficultyMode);
     setQuestions(quizData);
   };
 
@@ -165,6 +211,7 @@ function App() {
       const currentQuestion = questions[currentIndex];
       setDisplayQuestion(currentQuestion.question);
       setQuestionResolved(false);
+      setTimeLeft(TIME_LIMIT_SECONDS);
       
       const answers = [
         currentQuestion.correct_answer,
@@ -294,6 +341,10 @@ function App() {
     const nextIndex = currentIndex + 1;
     if (nextIndex < questions.length) {
       setCurrentIndex(nextIndex);
+      setQuestionResolved(false);
+      if (gameMode === 'time') {
+        setTimeLeft(TIME_LIMIT_SECONDS);
+      }
     } else {
       setQuizOver(true);
     }
@@ -335,6 +386,31 @@ function App() {
               <option value={15}>じっくり 15問</option>
               <option value={20}>がっつり 20問</option>
             </select>
+          </div>
+
+          <div style={{ marginBottom: '30px', textAlign: 'left' }}>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '16px' }}>難易度：</label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {DIFFICULTY_OPTIONS.map((difficulty) => (
+                <button
+                  key={difficulty.id}
+                  onClick={() => setDifficultyMode(difficulty.id)}
+                  style={{
+                    padding: '12px 14px',
+                    borderRadius: '8px',
+                    border: difficultyMode === difficulty.id ? '2px solid #dc3545' : '2px solid #d0d7de',
+                    backgroundColor: difficultyMode === difficulty.id ? '#fdecea' : '#ffffff',
+                    color: '#000000',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  <div>{difficulty.name}</div>
+                  <div style={{ fontSize: '13px', fontWeight: 'normal', color: '#555555', marginTop: '2px' }}>{difficulty.description}</div>
+                </button>
+              ))}
+            </div>
           </div>
 
           <div style={{ marginBottom: '30px', textAlign: 'left' }}>
@@ -559,5 +635,5 @@ function App() {
   );
 }
 
-export { createQuizData };
+export { createQuizData, TIME_LIMIT_SECONDS, PREFECTURE_DATA };
 export default App;
