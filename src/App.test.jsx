@@ -39,6 +39,18 @@ describe('createQuizData', () => {
       expect(quiz.incorrect_answers).toHaveLength(1);
     });
   });
+
+  it('generates numeric four-choice questions for prefecture values', () => {
+    const quizzes = createQuizData('area', 1, 'more', 'standard', 'four');
+    expect(quizzes).toHaveLength(1);
+    const quiz = quizzes[0];
+    expect(quiz.question).toMatch(/の面積はどれ？/);
+    expect(quiz.correct_answer).toMatch(/^[0-9,]+㎢$/);
+    expect(quiz.incorrect_answers).toHaveLength(3);
+    quiz.incorrect_answers.forEach((answer) => {
+      expect(answer).toMatch(/^[0-9,]+㎢$/);
+    });
+  });
 });
 
 describe('App component', () => {

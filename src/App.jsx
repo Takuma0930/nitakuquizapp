@@ -81,8 +81,8 @@ const COMPARISON_OPTIONS = [
 ];
 
 const ANSWER_OPTIONS = [
-  { id: 'two', name: '2択', description: '標準の2択クイズ' },
-  { id: 'four', name: '4択', description: '選択肢を4つに増やす' },
+  { id: 'two', name: '2択', description: '通常の都道府県名を選ぶ' },
+  { id: 'four', name: '4択（数値）', description: '都道府県の数値を選択する' },
 ];
 
 const TIME_LIMIT_SECONDS = 10;
@@ -108,14 +108,30 @@ const createQuizData = (selectedOption, numQuizzes, comparisonMode, difficultyMo
     return [sorted[index].pref, sorted[index + 1].pref];
   };
 
-  const pickAdditionalChoices = (correctPrefNames) => {
-    const candidates = PREFECTURE_DATA.filter((pref) => !correctPrefNames.includes(pref.name));
-    const choices = [];
-    while (choices.length < 2 && candidates.length > 0) {
-      const index = Math.floor(Math.random() * candidates.length);
-      choices.push(candidates.splice(index, 1)[0]);
+  const pickFourChoiceBase = (genreKey, difficultyMode) => {
+    const sorted = PREFECTURE_DATA
+      .map((pref) => ({ pref, value: pref[genreKey] }))
+      .sort((a, b) => a.value - b.value);
+
+    if (difficultyMode === 'close') {
+      const index = Math.floor(Math.random() * sorted.length);
+      const distances = sorted
+        .map((item, idx) => ({ ...item, idx, diff: Math.abs(item.value - sorted[index].value) }))
+        .filter((item) => item.idx !== index)
+        .sort((a, b) => a.diff - b.diff);
+      const choices = [sorted[index], ...distances.slice(0, 3)];
+      return choices.map((item) => item.pref);
     }
-    return choices;
+
+    const all = [...PREFECTURE_DATA];
+    const targetIndex = Math.floor(Math.random() * all.length);
+    const target = all.splice(targetIndex, 1)[0];
+    const otherChoices = [];
+    while (otherChoices.length < 3 && all.length > 0) {
+      const index = Math.floor(Math.random() * all.length);
+      otherChoices.push(all.splice(index, 1)[0]);
+    }
+    return [target, ...otherChoices];
   };
 
   for (let i = 0; i < numQuizzes; i++) {
@@ -127,39 +143,77 @@ const createQuizData = (selectedOption, numQuizzes, comparisonMode, difficultyMo
       activeGenre = GENRES.find(g => g.key === selectedOption);
     }
 
-    const [pref1, pref2] = difficultyMode === 'close'
-      ? pickClosePair(activeGenre.key)
-      : pickRandomPair(activeGenre.key);
+      let question = '';
+    let correctAnswer = '';
+    let incorrectAnswers = [];
+    let details = '';
 
-    const val1 = pref1[activeGenre.key];
-    const val2 = pref2[activeGenre.key];
+    if (answerMode === 'four') {
+      const choices = pickFourChoiceBase(activeGenre.key, difficultyMode);
+      const target = choices[0];
+      const correctValue = target[activeGenre.key];
+      const correctChoiceValue = `${correctValue.toLocaleString()}${activeGenre.unit}`;
+      const availableValues = new Set([correctChoiceValue]);
+      const allChoiceValues = [correctChoiceValue];
 
-    const isPref1More = val1 > val2;
-    const isCorrectForMore = comparisonMode === 'more' ? isPref1More : !isPref1More;
-    const correctAnswer = isCorrectForMore ? pref1.name : pref2.name;
-    const incorrectAnswer = isCorrectForMore ? pref2.name : pref1.name;
+      choices.forEach((pref) => {
+        const formatted = `${pref[activeGenre.key].toLocaleString()}${activeGenre.unit}`;
+        if (!availableValues.has(formatted)) {
+          availableValues.add(formatted);
+          allChoiceValues.push(formatted);
+        }
+      });
 
-    const details = `${pref1.name}: ${val1.toLocaleString()}${activeGenre.unit}\n${pref2.name}: ${val2.toLocaleString()}${activeGenre.unit}`;
+      const missingCount = 4 - allChoiceValues.length;
+      const remainingPrefs = PREFECTURE_DATA.filter((pref) => {
+        const formatted = `${pref[activeGenre.key].toLocaleString()}${activeGenre.unit}`;
+        return !availableValues.has(formatted);
+      });
+      while (allChoiceValues.length < 4 && remainingPrefs.length > 0) {
+        const index = Math.floor(Math.random() * remainingPrefs.length);
+        const nextValue = `${remainingPrefs[index][activeGenre.key].toLocaleString()}${activeGenre.unit}`;
+        availableValues.add(nextValue);
+        allChoiceValues.push(nextValue);
+        remainingPrefs.splice(index, 1);
+      }
 
-    const comparisonText = comparisonMode === 'more' ? '多い' : '少ない';
-    const genreText = activeGenre.key === 'area' ? '広い' : activeGenre.key === 'rice' ? '多い' : '多い';
-    const questionText = activeGenre.key === 'area'
-      ? `【面積が${comparisonMode === 'more' ? '広い' : '狭い'}】`
-      : activeGenre.key === 'rice'
-        ? `【お米の生産量（収穫量）が${comparisonMode === 'more' ? '多い' : '少ない'}】`
-        : `【人口が${comparisonMode === 'more' ? '多かった' : '少なかった'}】`;
+      const shuffledAnswers = allChoiceValues.sort(() => Math.random() - 0.5);
+      correctAnswer = correctChoiceValue;
+      incorrectAnswers = shuffledAnswers.filter((value) => value !== correctChoiceValue).slice(0, 3);
 
-    const extraChoices = answerMode === 'four'
-      ? pickAdditionalChoices([pref1.name, pref2.name])
-      : [];
+      question = `💡「${target.name}」の${activeGenre.key === 'area' ? '面積' : activeGenre.key === 'rice' ? 'お米の生産量' : '人口'}はどれ？`;
+      details = `${target.name}: ${correctChoiceValue}`;
+    } else {
+      const [pref1, pref2] = difficultyMode === 'close'
+        ? pickClosePair(activeGenre.key)
+        : pickRandomPair(activeGenre.key);
 
-    const incorrectAnswers = [incorrectAnswer, ...extraChoices.map((pref) => pref.name)];
+      const val1 = pref1[activeGenre.key];
+      const val2 = pref2[activeGenre.key];
+
+      const isPref1More = val1 > val2;
+      const isCorrectForMore = comparisonMode === 'more' ? isPref1More : !isPref1More;
+      correctAnswer = isCorrectForMore ? pref1.name : pref2.name;
+      const incorrectAnswer = isCorrectForMore ? pref2.name : pref1.name;
+
+      details = `${pref1.name}: ${val1.toLocaleString()}${activeGenre.unit}\n${pref2.name}: ${val2.toLocaleString()}${activeGenre.unit}`;
+
+      const comparisonText = comparisonMode === 'more' ? '多い' : '少ない';
+      const questionText = activeGenre.key === 'area'
+        ? `【面積が${comparisonMode === 'more' ? '広い' : '狭い'}】`
+        : activeGenre.key === 'rice'
+          ? `【お米の生産量（収穫量）が${comparisonMode === 'more' ? '多い' : '少ない'}】`
+          : `【人口が${comparisonMode === 'more' ? '多かった' : '少なかった'}】`;
+
+      question = `💡「${pref1.name}」と「${pref2.name}」、${questionText}のはどっち？`;
+      incorrectAnswers = [incorrectAnswer];
+    }
 
     quizzes.push({
-      question: `💡「${pref1.name}」と「${pref2.name}」、${questionText}のはどっち？`,
+      question,
       correct_answer: correctAnswer,
       incorrect_answers: incorrectAnswers,
-      details: details
+      details
     });
   }
 
@@ -485,30 +539,32 @@ function App() {
             </div>
           </div>
 
-          <div style={{ marginBottom: '30px', textAlign: 'left' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '16px' }}>比較の向き：</label>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {COMPARISON_OPTIONS.map((option) => (
-                <button
-                  key={option.id}
-                  onClick={() => setComparisonMode(option.id)}
-                  style={{
-                    padding: '12px 14px',
-                    borderRadius: '8px',
-                    border: comparisonMode === option.id ? '2px solid #28a745' : '2px solid #d0d7de',
-                    backgroundColor: comparisonMode === option.id ? '#eaf7ee' : '#ffffff',
-                    color: '#000000',
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    fontWeight: 'bold'
-                  }}
-                >
-                  <div>{option.name}</div>
-                  <div style={{ fontSize: '13px', fontWeight: 'normal', color: '#555555', marginTop: '2px' }}>{option.description}</div>
-                </button>
-              ))}
+          {answerMode !== 'four' && (
+            <div style={{ marginBottom: '30px', textAlign: 'left' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '16px' }}>比較の向き：</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {COMPARISON_OPTIONS.map((option) => (
+                  <button
+                    key={option.id}
+                    onClick={() => setComparisonMode(option.id)}
+                    style={{
+                      padding: '12px 14px',
+                      borderRadius: '8px',
+                      border: comparisonMode === option.id ? '2px solid #28a745' : '2px solid #d0d7de',
+                      backgroundColor: comparisonMode === option.id ? '#eaf7ee' : '#ffffff',
+                      color: '#000000',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    <div>{option.name}</div>
+                    <div style={{ fontSize: '13px', fontWeight: 'normal', color: '#555555', marginTop: '2px' }}>{option.description}</div>
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           <button onClick={startStatQuiz} style={{ padding: '15px 40px', fontSize: '18px', backgroundColor: '#007bff', color: '#ffffff', border: 'none', borderRadius: '30px', cursor: 'pointer', fontWeight: 'bold', width: '100%', marginBottom: '15px' }}>
             クイズを開始する 🚀
@@ -589,7 +645,7 @@ function App() {
                   cursor: 'pointer', 
                   borderRadius: '8px', 
                   border: '3px solid #222222', 
-                  backgroundColor: index === 0 ? '#e53935' : '#1e88e5', 
+                  backgroundColor: '#1e88e5', 
                   color: '#ffffff', 
                   boxShadow: '0 4px 0 #222222', 
                   display: 'block', 
